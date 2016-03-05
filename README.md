@@ -1,6 +1,6 @@
 spritz-xor.c
 ============
-An `Spritz-Xor` cipher implementation to use as symmetric
+An `Spritz-xor` cipher implementation to use as symmetric
 stream cipher in ISO C.
 
 Spritz is a RC4 redesign by Ron Rivest and Jacob Schuldt
