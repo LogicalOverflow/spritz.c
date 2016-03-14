@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-c -ansi -pedantic -std=c99 -Wall -Werror
-SOURCES=main.c spritz-xor.c
+SOURCES=main.c spritz.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=main
 

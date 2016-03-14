@@ -24,21 +24,30 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
-#include "spritz-xor.h"
+#include "spritz.h"
 
-#define SWAP(i, j) (i ^= j); (j ^= i); (i ^= j)
-#define LOBYTE(b) ((uint8_t)(b & 0x0F))
-#define HIBYTE(b) ((uint8_t)(b >> 4))
+#define SWAP(i, j) uint8_t t = (i); (i) = (j); (j) = t;
+#define LOBYTE(b) ((uint8_t)((b) & 0x0F))
+#define HIBYTE(b) ((uint8_t)((b) >> 4))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define S(a) s[(uint8_t)(a)]
 #define N 256
 
-uint8_t i, j, k, w, z, a;
-uint8_t s[N];
+uint8_t a, i, j, k, w, z, s[N];
 
 static void update() {
     i += w;
-    j = k + s[j + s[i]];
-    k = i + k + s[j];
-    SWAP(s[i], s[j]);
+    j = k + S(j + S(i));
+    k = i + k + S(j);
+    SWAP(S(i), S(j));
+}
+
+static void crush() {
+    for (uint8_t v = 0; v < (N / 2); v++) {
+        if (S(v) > S(N - 1 - v)) {
+            SWAP(S(v), S(N - 1 - v));
+        }
+    }
 }
 
 static void whip() {
@@ -48,12 +57,9 @@ static void whip() {
     w += 2;
 }
 
-static void crush() {
-    for (uint32_t v = 0; v < (N / 2); v++) {
-        if (s[v] > s[N - 1 - v]) {
-            SWAP(s[v], s[N - 1 - v]);
-        }
-    }
+static uint8_t output() {
+    z = S(j + S(i + S((z + k))));
+    return z;
 }
 
 static void shuffle() {
@@ -65,12 +71,7 @@ static void shuffle() {
     a = 0;
 }
 
-static inline uint8_t output() {
-    z = s[j + s[i + s[z + k]]];  
-    return z;
-}
-
-static inline uint8_t drip() {
+static uint8_t drip() {
     if (a > 0) {
         shuffle();
     }
@@ -78,41 +79,78 @@ static inline uint8_t drip() {
     return output();
 }
 
-static void absorb_nibble(uint8_t x) {
-    if (a < (N / 2)) {
+static void squeeze(uint8_t *r, size_t rs) {
+    if (a > 0) {
         shuffle();
     }
-    SWAP(s[a], s[(N / 2) + x]);
+    for (size_t v = 0; v < MIN(rs, N); v++) {
+        r[v] = drip();
+    }
+}
+
+static void absorb_nibble(uint8_t x) {
+    if (a == (N / 2)) {
+        shuffle();
+    }
+    SWAP(S(a), S((N / 2) + x));
     a++;
 }
 
-static inline void absorb_byte(uint8_t b) {
+static void absorb_stop() {
+    if (a == (N / 2)) {
+        shuffle();
+    }
+    a++;    
+}
+
+static void absorb_byte(uint8_t b) {
     absorb_nibble(LOBYTE(b));
     absorb_nibble(HIBYTE(b));    
 }
 
-static inline void absorb(const uint8_t *k, size_t ks) {
-    for (size_t v = 0; v < ks; v++) {
-        absorb_byte(k[v]);
+static void absorb(const uint8_t *b, size_t bs) {
+    for (size_t v = 0; v < bs; v++) {
+        absorb_byte(b[v]);
     }    
 }
 
-static inline void initialize_state() {
-    i = j = k = z = a = 0; w = 1;
+static void initialize_state() {
+    a = i = j = k = z = 0; w = 1;
     for (uint32_t v = 0; v < N; v++) {
-        s[v] = (uint8_t)v;
+        S(v) = (uint8_t)v;
     }    
 }
 
-static inline void key_setup(const uint8_t *k, size_t ks) {
+static void key_setup(const uint8_t *k, size_t ks) {
     initialize_state();
     absorb(k, ks);
 }
 
-extern void spritz_crypt(uint8_t *m, size_t ms, const uint8_t *k, size_t ks) {
+extern void spritz_encrypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms) {
     key_setup(k, ks);
+    for (size_t v = 0; v < ms; v++) {
+        m[v] += drip();
+    }
+}
 
+extern void spritz_decrypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms) {
+    key_setup(k, ks);
+    for (size_t v = 0; v < ms; v++) {
+        m[v] -= drip();
+    }
+}
+
+extern void spritz_crypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms) {
+    key_setup(k, ks);
     for (size_t v = 0; v < ms; v++) {
         m[v] ^= drip();
     }
+}
+
+extern void spritz_hash(const uint8_t *m, size_t ms, uint8_t *r, size_t rs) {
+    initialize_state();
+    absorb(m, ms);
+    absorb_stop();
+    absorb((uint8_t *)&rs, 1);
+    squeeze(r, rs);
 }

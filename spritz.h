@@ -24,12 +24,15 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
-#ifndef SPRITZ_XOR_H
-#define SPRITZ_XOR_H
+#ifndef SPRITZ_H
+#define SPRITZ_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-extern void spritz_crypt(uint8_t *m, size_t ms, const uint8_t *k, size_t ks);
+extern void spritz_encrypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms);
+extern void spritz_decrypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms);
+extern void spritz_crypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms);
+extern void spritz_hash(const uint8_t *m, size_t ms, uint8_t *r, size_t rs);
 
-#endif // SPRITZ_XOR_H
+#endif // SPRITZ_H
