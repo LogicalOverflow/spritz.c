@@ -24,11 +24,11 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
+#include "spritz.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "spritz.h"
 
 int main(void) {
     uint8_t m[] = "ABC", r[32], h[] = "\x02\x8f\xa2\xb4\x8b\x93\x4a\x18";
@@ -36,8 +36,8 @@ int main(void) {
     spritz_hash(m, 3, r, 32);
 
     if (strncmp((const char *)r, (const char *)h, 8) == 0) {
-        return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
     } else {
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 }

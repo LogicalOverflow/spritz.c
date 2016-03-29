@@ -9,7 +9,7 @@ all: $(SOURCES) $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@
 
-.c.o:
+%.o,%.c:
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
