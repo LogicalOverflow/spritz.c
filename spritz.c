@@ -1,11 +1,11 @@
 /*
  * This is free and unencumbered software released into the public domain.
- * 
+ *
  * Anyone is free to copy, modify, publish, use, compile, sell, or
  * distribute this software, either in source code form or as a compiled
  * binary, for any purpose, commercial or non-commercial, and by any
  * means.
- * 
+ *
  * In jurisdictions that recognize copyright laws, the author or authors
  * of this software dedicate any and all copyright interest in the
  * software to the public domain. We make this dedication for the benefit
@@ -13,7 +13,7 @@
  * successors. We intend this dedication to be an overt act of
  * relinquishment in perpetuity of all present and future rights to this
  * software under copyright law.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,19 +21,19 @@
  * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * For more information, please refer to <http://unlicense.org>
  */
 #include "spritz.h"
 
-#define SWAP(i, j) uint8_t t = (i); (i) = (j); (j) = t;
+#define SWAP(i, j) (t) = (i); (i) = (j); (j) = (t);
 #define LOBYTE(b) ((uint8_t)((b) & 0x0F))
 #define HIBYTE(b) ((uint8_t)((b) >> 4))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define S(a) s[(uint8_t)(a)]
 #define N 256
 
-uint8_t a, i, j, k, w, z, s[N];
+uint8_t a, i, j, k, t, w, z, s[N];
 
 static void update() {
     i += w;
@@ -43,7 +43,8 @@ static void update() {
 }
 
 static void crush() {
-    for (uint8_t v = 0; v < (N / 2); v++) {
+    uint8_t v;
+    for (v = 0; v < (N / 2); v++) {
         if (S(v) > S(N - 1 - v)) {
             SWAP(S(v), S(N - 1 - v));
         }
@@ -51,7 +52,8 @@ static void crush() {
 }
 
 static void whip() {
-    for (uint32_t v = 0; v < (N * 2); v++) {
+    uint32_t v;
+    for (v = 0; v < (N * 2); v++) {
         update();
     }
     w += 2;
@@ -80,10 +82,11 @@ static uint8_t drip() {
 }
 
 static void squeeze(uint8_t *r, size_t rs) {
+    size_t v;
     if (a > 0) {
         shuffle();
     }
-    for (size_t v = 0; v < MIN(rs, N); v++) {
+    for (v = 0; v < MIN(rs, N); v++) {
         r[v] = drip();
     }
 }
@@ -109,14 +112,16 @@ static void absorb_byte(uint8_t b) {
 }
 
 static void absorb(const uint8_t *b, size_t bs) {
-    for (size_t v = 0; v < bs; v++) {
+    size_t v;
+    for (v = 0; v < bs; v++) {
         absorb_byte(b[v]);
     }    
 }
 
 static void initialize_state() {
+    uint32_t v;
     a = i = j = k = z = 0; w = 1;
-    for (uint32_t v = 0; v < N; v++) {
+    for (v = 0; v < N; v++) {
         S(v) = (uint8_t)v;
     }    
 }
@@ -127,22 +132,25 @@ static void key_setup(const uint8_t *k, size_t ks) {
 }
 
 extern void spritz_encrypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms) {
+    size_t v;
     key_setup(k, ks);
-    for (size_t v = 0; v < ms; v++) {
+    for (v = 0; v < ms; v++) {
         m[v] += drip();
     }
 }
 
 extern void spritz_decrypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms) {
+    size_t v;
     key_setup(k, ks);
-    for (size_t v = 0; v < ms; v++) {
+    for (v = 0; v < ms; v++) {
         m[v] -= drip();
     }
 }
 
 extern void spritz_crypt(const uint8_t *k, size_t ks, uint8_t *m, size_t ms) {
+    size_t v;
     key_setup(k, ks);
-    for (size_t v = 0; v < ms; v++) {
+    for (v = 0; v < ms; v++) {
         m[v] ^= drip();
     }
 }

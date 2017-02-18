@@ -1,6 +1,6 @@
 spritz.c
 ========
-An `Spritz` cipher implementation in ISO C.
+An `Spritz` cipher implementation in ANSI C.
 
 Spritz is a RC4 redesign by Ron Rivest and Jacob Schuldt
 [(PDF)](https://people.csail.mit.edu/rivest/pubs/RS14.pdf).
